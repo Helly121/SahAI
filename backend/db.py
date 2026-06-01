@@ -8,9 +8,25 @@ from sqlalchemy import (
 
 # DB URL prefers managed DATABASE_URL; falls back to local sqlite file
 LOCAL_DB_FILE = os.path.join(os.path.dirname(__file__), 'skillforge.db')
-DB_URL = os.getenv('DATABASE_URL') or f"sqlite:///{LOCAL_DB_FILE}"
+_raw_db = os.getenv('DATABASE_URL')
+if _raw_db:
+    _raw_db = _raw_db.strip()
+    # remove surrounding quotes if someone pasted them in the UI
+    if (_raw_db.startswith('"') and _raw_db.endswith('"')) or (_raw_db.startswith("'") and _raw_db.endswith("'")):
+        _raw_db = _raw_db[1:-1].strip()
+    # convert legacy postgres:// scheme to postgresql:// which SQLAlchemy expects
+    if _raw_db.startswith('postgres://'):
+        _raw_db = 'postgresql://' + _raw_db[len('postgres://'):]
+    DB_URL = _raw_db
+else:
+    DB_URL = f"sqlite:///{LOCAL_DB_FILE}"
 
-engine = create_engine(DB_URL, future=True)
+try:
+    engine = create_engine(DB_URL, future=True)
+except Exception as e:
+    print(f"Database URL parse error: {e}")
+    print("Sanitized DATABASE_URL:", repr(DB_URL))
+    raise
 metadata = MetaData()
 
 users = Table(
