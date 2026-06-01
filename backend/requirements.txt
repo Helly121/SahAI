@@ -11,3 +11,5 @@ soundfile
 openai
 gunicorn
 scipy
+SQLAlchemy
+psycopg2-binary
