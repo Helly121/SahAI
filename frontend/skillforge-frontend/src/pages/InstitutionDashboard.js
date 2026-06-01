@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaSearch, FaFilter, FaGraduationCap, FaExternalLinkAlt, FaCheckCircle, FaAward, FaBuilding } from 'react-icons/fa';
-import axios from 'axios';
+import api from '../utils/axios';
 
 const InstitutionDashboard = () => {
   const [candidates, setCandidates] = useState([]);
@@ -16,8 +16,7 @@ const InstitutionDashboard = () => {
     const fetchCandidates = async () => {
       try {
         setLoading(true);
-        const backendUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
-        const res = await axios.get(`${backendUrl}/api/public/candidates`);
+        const res = await api.get('/api/public/candidates');
         setCandidates(res.data);
         setLoading(false);
       } catch (err) {

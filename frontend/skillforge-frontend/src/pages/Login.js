@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react'; // Added useEffect
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/axios';
 import { FaUser, FaLock, FaSignInAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import '../styles/App.css';
 
@@ -101,11 +101,11 @@ const Login = () => {
 
     setIsSubmitting(true);
     try {
-      const res = await axios.post('http://127.0.0.1:5000/api/auth/login', { email, password });
+      const res = await api.post('/api/auth/login', { email, password });
       sessionStorage.setItem('token', res.data.token);
       sessionStorage.setItem('user', email);
       sessionStorage.setItem('justLoggedIn', 'true');
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       // Reload to trigger App.js useEffect and detect sessionStorage
       window.location.href = '/';
     } catch (err) {

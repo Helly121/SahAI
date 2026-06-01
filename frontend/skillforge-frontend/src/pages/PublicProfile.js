@@ -16,7 +16,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import axios from 'axios';
+import api from '../utils/axios';
 
 ChartJS.register(
   RadialLinearScale,
@@ -41,9 +41,7 @@ const PublicProfile = () => {
     const fetchPublicProfile = async () => {
       try {
         setLoading(true);
-        // Point to our Flask backend running on port 5000
-        const backendUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
-        const res = await axios.get(`${backendUrl}/api/progress/profile/share/${encodeURIComponent(userId)}`);
+        const res = await api.get(`/api/progress/profile/share/${encodeURIComponent(userId)}`);
         setProfile(res.data);
         setLoading(false);
       } catch (err) {

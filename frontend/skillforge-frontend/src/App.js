@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import axios from 'axios';
+import api from './utils/axios';
 import './styles/App.css';
 import './styles/App1.css';
 import './styles/mock.css';
@@ -37,13 +37,13 @@ function App() {
       setToken(storedToken);
       setUser(storedUser);
       setIsAuthenticated(true);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
     } else {
       // Ensure clean state if no session
       setToken(null);
       setUser('');
       setIsAuthenticated(false);
-      delete axios.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['Authorization'];
     }
   }, []);
 
@@ -58,7 +58,7 @@ function App() {
     setToken(null);
     setIsAuthenticated(false);
     setUser('');
-    delete axios.defaults.headers.common['Authorization'];
+    delete api.defaults.headers.common['Authorization'];
     window.location.href = '/login';
   };
 

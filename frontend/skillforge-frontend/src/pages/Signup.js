@@ -9,7 +9,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/axios';
 import { FaUser, FaLock, FaSignInAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import '../styles/App.css';
 
@@ -104,7 +104,7 @@ const Signup = () => {
     setError('');  // Clear previous errors
     try {
       // Send JSON: Matches backend {username, email, password}
-      const res = await axios.post('http://127.0.0.1:5000/api/auth/signup', { 
+      const res = await api.post('/api/auth/signup', { 
         username,  // Backend expects 'username'
         email, 
         password 
@@ -113,7 +113,7 @@ const Signup = () => {
       sessionStorage.setItem('token', res.data.token);
       sessionStorage.setItem('user', email);
       sessionStorage.setItem('justLoggedIn', 'true');
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+      api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       // Use navigate for smooth redirect (fixes ESLint)
       navigate('/');
     } catch (err) {
