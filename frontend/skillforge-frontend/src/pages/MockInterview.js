@@ -6,6 +6,7 @@
 // Visual Enhancements: Expanded main body visibility (larger paddings, video/response heights, grid gaps); minimized footer space; eye-catching pro design (glows, hovers, icons, typography boosts)—background unchanged.
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import api from '../utils/axios';
 
 const css = `
 /* Embedded mock CSS (keeps theme/colors you asked) */
@@ -389,26 +390,16 @@ export default function MockInterview() {
 
     const pointsToAdd = Math.floor(overallScore / 10); // e.g., 85% score -> 8 points; adjust formula as needed
     try {
-      const response = await fetch('http://localhost:5000/api/gamification/add-points', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          activity: 'mock_interview',
-          score: overallScore,
-          points: pointsToAdd,
-          questionIndex: qIndex,
-          questionType: questionBank[qIndex]?.type || 'general',
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to update points: ${response.status}`);
-      }
-
-      console.log(`Added ${pointsToAdd} points for mock interview score: ${overallScore}`);
+        try {
+          await api.post('/api/award-coins', {
+            questionIndex: qIndex,
+            confidence: (confidence || 0),
+            relevance: 0,
+          });
+          console.log(`Requested award-coins for score: ${overallScore}`);
+        } catch (err) {
+          console.error('Failed to award coins via API', err);
+        }
     } catch (error) {
       console.error('Error updating gamification points:', error);
       // Silently fail - no user-facing message
@@ -562,9 +553,8 @@ export default function MockInterview() {
         fd.append('confidence', (confidence || 0).toString());
         fd.append('bilingual', bilingual ? 'true' : 'false');
 
-        const res = await fetch('http://localhost:5000/api/analyze', { method:'POST', body: fd });
-        if (!res.ok) throw new Error('analysis failed');
-        const json = await res.json();
+        const axiosRes = await api.post('/api/analyze', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        const json = axiosRes.data;
         // normalize server result to frontend shape (enhanced for mock feedback)
         const result = {
           overall: json.overall ?? Math.round(((json.semantic_similarity ?? 0.7)*0.6 + (json.fluency ?? 0.8)*0.4)*100),
