@@ -3,15 +3,9 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 import spacy
-import librosa
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 import db
-import numpy as np
-from pydub import AudioSegment
-import io
-import re
-from sklearn.metrics.pairwise import cosine_similarity
 import json
 from datetime import date
 from typing import List, Dict
@@ -21,6 +15,8 @@ import traceback
 import random
 import base64  # For TTS b64 if needed
 import warnings  # To suppress deprecation warnings
+import io
+import re
 
 from dotenv import load_dotenv
 load_dotenv()  # Loads .env
