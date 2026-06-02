@@ -248,7 +248,8 @@ def analyze():
         result['pauses'] = 0; result['fluency'] = 0.5; result['vocal'] = "Voice analysis pending—full recording unlocks your unique rhythm!"
         result['blended_confidence'] = js_conf * 0.5; result['wpm'] = 0; result['energy_variation'] = 0.0
         result['tempo_fluctuation'] = 0.0; result['jitter'] = 0.0
-        if audio_file:
+        audio_enabled = os.getenv('AUDIO_ENABLED', 'true').lower() in ('1','true','yes')
+        if audio_file and audio_enabled:
             try:
                 temp_dir = tempfile.gettempdir()
                 temp_path = os.path.join(temp_dir, f"temp_audio_{random.randint(1000,9999)}.wav")
