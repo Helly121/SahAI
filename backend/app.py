@@ -678,6 +678,28 @@ def feedback():
         print(f"Feedback error: {e}")
         return jsonify({'error': 'Failed to submit feedback'}), 500
 
+
+@app.route('/api/debug/llm', methods=['GET'])
+def debug_llm():
+    try:
+        if client is None:
+            return jsonify({'ok': False, 'error': 'GROQ_API_KEY not set or client not configured.'}), 200
+        resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "Say hello in one short sentence."}],
+            max_tokens=10,
+            temperature=0.2
+        )
+        text = ''
+        try:
+            text = resp.choices[0].message.content.strip()
+        except Exception:
+            text = str(resp)
+        return jsonify({'ok': True, 'model_response': text})
+    except Exception as e:
+        print(f"LLM debug error: {e}\n{traceback.format_exc()}")
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
 @app.route('/api/admin/contacts', methods=['GET'])
 @jwt_required()
 def get_contacts():
