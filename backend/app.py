@@ -684,18 +684,68 @@ def debug_llm():
     try:
         if client is None:
             return jsonify({'ok': False, 'error': 'GROQ_API_KEY not set or client not configured.'}), 200
+
+        # Try to list models available to this key and pick a usable one.
+        available_models = []
+        try:
+            models_resp = client.models.list()
+            # models_resp may be an object with .data or a dict
+            if hasattr(models_resp, 'data'):
+                for m in models_resp.data:
+                    mid = getattr(m, 'id', None) or (m.get('id') if isinstance(m, dict) else None)
+                    if mid:
+                        available_models.append(mid)
+            elif isinstance(models_resp, dict):
+                for m in models_resp.get('data', []):
+                    if isinstance(m, dict):
+                        available_models.append(m.get('id'))
+        except Exception as e:
+            print(f"Model list failed (non-fatal): {e}")
+
+        model_to_try = None
+        if available_models:
+            model_to_try = available_models[0]
+            print(f"Using available model: {model_to_try}")
+        else:
+            # Fallback candidate list (try until one works)
+            candidates = ["llama-3.3-70b-versatile", "llama3.1-70b-versatile", "gpt-4o-mini", "gpt-4o"]
+            for c in candidates:
+                try:
+                    tmp = client.chat.completions.create(model=c, messages=[{"role": "user", "content": "hi"}], max_tokens=5)
+                    model_to_try = c
+                    print(f"Fallback model usable: {c}")
+                    break
+                except Exception as ex:
+                    print(f"Model {c} not usable: {ex}")
+
+        if not model_to_try:
+            return jsonify({'ok': False, 'error': 'No accessible models found for this Groq key.', 'available_models_preview': available_models[:10]}), 200
+
+        # Make a small chat request to the chosen model
         resp = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model_to_try,
             messages=[{"role": "user", "content": "Say hello in one short sentence."}],
-            max_tokens=10,
+            max_tokens=40,
             temperature=0.2
         )
+
+        # Robustly extract text from response
         text = ''
         try:
-            text = resp.choices[0].message.content.strip()
+            if hasattr(resp, 'choices') and resp.choices:
+                choice = resp.choices[0]
+                if hasattr(choice, 'message'):
+                    msg = choice.message
+                    text = getattr(msg, 'content', None) or (msg.get('content') if isinstance(msg, dict) else None)
+                if not text:
+                    text = getattr(choice, 'text', None) or (choice.get('text') if isinstance(choice, dict) else None)
+            if not text:
+                text = getattr(resp, 'text', None) or str(resp)
+            text = text.strip() if isinstance(text, str) else str(text)
         except Exception:
             text = str(resp)
-        return jsonify({'ok': True, 'model_response': text})
+
+        return jsonify({'ok': True, 'model_used': model_to_try, 'model_response': text, 'available_models_preview': available_models[:10]}), 200
     except Exception as e:
         print(f"LLM debug error: {e}\n{traceback.format_exc()}")
         return jsonify({'ok': False, 'error': str(e)}), 500
