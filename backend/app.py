@@ -700,6 +700,24 @@ def debug_llm():
         print(f"LLM debug error: {e}\n{traceback.format_exc()}")
         return jsonify({'ok': False, 'error': str(e)}), 500
 
+
+@app.route('/api/debug/env', methods=['GET'])
+def debug_env():
+    try:
+        key = os.getenv('GROQ_API_KEY')
+        present = bool(key and key.strip())
+        masked = None
+        if present:
+            k = key.strip()
+            if len(k) > 10:
+                masked = k[:4] + '...' + k[-4:]
+            else:
+                masked = '***'
+        return jsonify({'GROQ_API_KEY_present': present, 'GROQ_API_KEY_masked': masked}), 200
+    except Exception as e:
+        print(f"Env debug error: {e}\n{traceback.format_exc()}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/admin/contacts', methods=['GET'])
 @jwt_required()
 def get_contacts():
